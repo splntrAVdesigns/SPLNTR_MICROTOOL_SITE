@@ -76,6 +76,12 @@ Until env vars are set, the form still works and logs signups server-side.
 
 ## Parked for later ("future developments")
 
+- Audio-reactive hero terrain (mic-driven). Removed after it caused WebGL
+  render failures on real hardware that could not be reproduced headlessly.
+  Rule for revisiting: FIRST ship a diagnostics build (console logging of
+  context creation, shader compile status, and errors), confirm root cause
+  from real browser console output, THEN reintroduce the feature.
+
 - Community page (Discord link-out or embedded forum)
 - Beta tester quotes / social proof strip
 - Press kit page (logo pack + screenshots) — expected by reviewers at launch
