@@ -102,7 +102,7 @@ export default function HomePage() {
         </div>
 
         {/* Rolling media strip — tiles swap to real app/plugin videos later */}
-        <div className="pb-20">
+        <div className="cv-auto pb-20">
           <MediaCarousel />
         </div>
       </section>
