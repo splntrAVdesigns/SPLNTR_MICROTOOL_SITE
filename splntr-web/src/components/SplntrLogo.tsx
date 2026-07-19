@@ -1,19 +1,18 @@
 /**
- * SPLNTR bolt mark — exact inline SVG traced from the brand PNG
- * (two split triangles, viewBox matches source proportions).
- * Inherits color via currentColor so it can glow/recolor with CSS.
+ * SPLNTR bolt mark â€” official brand vector (SPLNTR_ICON_LOGO_WHT.svg),
+ * inlined with currentColor so it recolors via CSS (text-volt, etc.).
  */
 export function SplntrBolt({ className = "h-6 w-6" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 308 398" fill="none" className={className} aria-hidden="true">
-      <path d="M193 1 1 194l121 70L193 1Z" fill="currentColor" />
-      <path d="M185 133 114 396l192-193-121-70Z" fill="currentColor" />
+    <svg viewBox="0 0 576 745" fill="none" className={className} aria-hidden="true">
+      <path d="M363.314,0l-134.183,496.99l-229.131,-132.289l363.314,-364.701Z" fill="currentColor" />
+      <path d="M211.816,744.265l363.314,-364.701l-229.131,-132.289l-134.183,496.99Z" fill="currentColor" opacity="0.6" />
     </svg>
   );
 }
 
 /**
- * SPLNTR wordmark — official brand vector (SPLNTR_MAIN_FONT_LOGO_WHT.svg)
+ * SPLNTR wordmark â€” official brand vector (SPLNTR_MAIN_FONT_LOGO_WHT.svg)
  * inlined with currentColor fills so it recolors via CSS (text-volt, etc.).
  */
 export function SplntrWordmark({ className = "h-[18px] w-auto text-volt" }: { className?: string }) {
