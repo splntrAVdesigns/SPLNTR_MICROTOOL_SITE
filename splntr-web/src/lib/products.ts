@@ -1,4 +1,4 @@
-export type ProductStatus = "closed-beta" | "coming-soon" | "released";
+export type ProductStatus = "closed-beta" | "dev-stage" | "coming-soon" | "released";
 
 export interface Product {
   slug: string;
@@ -75,8 +75,8 @@ export const PRODUCTS: Product[] = [
     tagline: "A modern music theory and sound design platform — learn, analyze, and create faster.",
     description:
       "Harmony Compass is a web-based audio engine for producers who want theory to work for them. Explore harmony, analyze ideas, and turn understanding into sound without leaving the browser.",
-    status: "closed-beta",
-    release: "In closed beta",
+    status: "dev-stage",
+    release: "In development",
     features: [
       { title: "Theory that plays", body: "Hear every concept as sound. Scales, chords, and progressions are playable, not just diagrams." },
       { title: "Analysis tools", body: "Break down ideas and understand why they work — then reuse the pattern in your own music." },
