@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import WaitlistForm from "@/components/WaitlistForm";
+import TiltCard from "@/components/TiltCard";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -66,8 +67,8 @@ export default function ShopPage() {
 
       <div className="mt-12 grid gap-5 sm:grid-cols-2">
         {CATEGORIES.map((c) => (
+          <TiltCard key={c.id}>
           <div
-            key={c.id}
             className="group relative flex flex-col rounded-lg border border-line bg-panel/60 p-6 transition hover:border-volt/50 hover:shadow-volt"
           >
             <div className="flex items-center justify-between">
@@ -81,6 +82,7 @@ export default function ShopPage() {
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-haze">{c.blurb}</p>
           </div>
+          </TiltCard>
         ))}
       </div>
 
