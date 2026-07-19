@@ -1,16 +1,13 @@
 import Link from "next/link";
 import { SITE, LEGAL_DOCS } from "@/lib/site";
-import { SplntrBolt } from "./SplntrLogo";
+import { SplntrWordmark } from "./SplntrLogo";
 
 export default function SiteFooter() {
   return (
     <footer className="border-t border-line/70 bg-panel/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2 text-volt">
-            <SplntrBolt className="h-5 w-5" />
-            <span className="font-display italic tracking-widest">SPLNTR</span>
-          </div>
+          <SplntrWordmark className="h-[18px] w-auto text-volt" />
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-haze">
             Audio &amp; visual micro tools for modern experimentation and application.
           </p>
