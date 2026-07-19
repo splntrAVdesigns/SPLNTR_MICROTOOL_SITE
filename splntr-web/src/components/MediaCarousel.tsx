@@ -57,8 +57,18 @@ function TileVisual({ id }: { id: string }) {
         </svg>
       );
     case "gradient":
+      // No per-frame filter:blur — that was expensive to repaint every frame.
+      // A soft-edged gradient via mask + slow rotation reads the same but
+      // costs far less on the compositor.
       return (
-        <div className="h-full w-full" style={{ background: "conic-gradient(from 0deg at 50% 50%, #26A8FF, #7C4DFF, #FF4D9E, #26A8FF)", animation: "tileHue 8s linear infinite", filter: "blur(18px) saturate(1.2)", transform: "scale(1.4)" }} />
+        <div
+          className="h-full w-full"
+          style={{
+            background: "conic-gradient(from 0deg at 50% 50%, #26A8FF, #7C4DFF, #FF4D9E, #26A8FF)",
+            animation: "tileHue 10s linear infinite",
+            transform: "scale(1.3)",
+          }}
+        />
       );
     case "signal":
       return (
