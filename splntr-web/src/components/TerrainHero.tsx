@@ -1,23 +1,21 @@
 "use client";
 
 /**
- * TerrainHero — SPLNTR signature visual, now AUDIO-REACTIVE.
+ * TerrainHero — SPLNTR signature visual with optional audio reactivity.
  *
- * A GLSL wireframe terrain glowing electric blue. In idle mode it drifts
- * calmly. Click "React to sound" and (with mic permission) live audio drives
- * the terrain: bass energy raises ridge amplitude and line glow — Orbital
- * Visualizer's premise, demonstrated on the homepage.
+ * DEFAULT (always): the wireframe terrain renders and drifts on load — the
+ * mic changes nothing until the user enables it.
+ * LIVE (opt-in): mic bass energy raises ridge amplitude and glow.
  *
- * Architecture:
- *  - Audio analysis runs outside React state: an AnalyserNode feeds a shared
- *    mutable ref, read per-frame in useFrame → zero re-renders on the hot path
- *  - Bass (low-bin) energy with asymmetric smoothing: fast attack, slow release
- *  - Full cleanup on stop/unmount: tracks stopped, AudioContext closed
- *
- * Performance rules baked in:
- *  - DPR capped at 1.75; reduced segment count on small screens
- *  - Honors prefers-reduced-motion (static frame, mic button hidden)
- *  - deltaTime clamped to avoid jump-cuts after tab switches
+ * v2 fixes:
+ *  - ONE loop: audio analysis now runs inside r3f's useFrame (the previous
+ *    separate requestAnimationFrame loop doubled per-frame work — the cause
+ *    of the sluggishness when the mic was live)
+ *  - Preallocated analysis buffer, fftSize 128 (was 256) — cheaper per frame
+ *  - CSS grid fallback layer: if WebGL fails or is slow to init, the hero
+ *    shows a static brand grid instead of empty black; it fades out the
+ *    moment the first WebGL frame is confirmed
+ *  - webglcontextlost is logged to console for diagnosis
  */
 
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -26,7 +24,7 @@ import * as THREE from "three";
 
 const VERT = /* glsl */ `
   uniform float uTime;
-  uniform float uAudio;      // smoothed 0..1 bass energy
+  uniform float uAudio;
   varying float vElev;
   varying float vDist;
 
@@ -49,9 +47,7 @@ const VERT = /* glsl */ `
     vec2 p = vec2(pos.x * 0.14, pos.y * 0.14 + uTime * 0.06);
     float e = noise(p) * 0.75 + noise(p * 2.3 + 7.0) * 0.25;
     float corridor = smoothstep(0.6, 5.5, abs(pos.x));
-    // Audio raises ridge amplitude (up to ~2.4x at full energy)
-    float amp = mix(0.35, 2.6, corridor) * (1.0 + uAudio * 1.4);
-    pos.z += e * amp;
+    pos.z += e * mix(0.35, 2.6, corridor) * (1.0 + uAudio * 1.4);
 
     vElev = e * (1.0 + uAudio * 0.6);
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
@@ -70,24 +66,25 @@ const FRAG = /* glsl */ `
   void main() {
     float glow = 0.35 + vElev * 0.9 + uAudio * 0.35;
     float fade = 1.0 - smoothstep(6.0, 26.0, vDist);
-    vec3 col = uColor * glow;
-    gl_FragColor = vec4(col, fade * 0.9);
+    gl_FragColor = vec4(uColor * glow, fade * 0.9);
   }
 `;
 
-/** Shared mutable audio level — written by the analyser loop, read per-frame. */
-interface AudioLevelRef {
-  current: number;
+/** Audio pipeline shared with the render loop — mutated outside React state. */
+interface AudioPipe {
+  analyser: AnalyserNode | null;
+  bins: Uint8Array | null;
+  level: number; // smoothed 0..1
 }
 
 function TerrainMesh({
   animate,
   segments,
-  audioLevel,
+  audio,
 }: {
   animate: boolean;
   segments: number;
-  audioLevel: AudioLevelRef;
+  audio: React.MutableRefObject<AudioPipe>;
 }) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -103,12 +100,25 @@ function TerrainMesh({
   useFrame((_, delta) => {
     const mat = matRef.current;
     if (!mat) return;
-    const dt = Math.min(delta, 1 / 30); // clamp: no jump-cuts after tab switch
-    if (animate) {
-      // Audio also nudges scroll speed slightly for a "driving" feel
-      mat.uniforms.uTime.value += dt * (1.0 + audioLevel.current * 0.6);
+    const dt = Math.min(delta, 1 / 30);
+
+    // Audio analysis — same loop as rendering, only when the mic is live.
+    const a = audio.current;
+    if (a.analyser && a.bins) {
+      a.analyser.getByteFrequencyData(a.bins as Uint8Array<ArrayBuffer>);
+      let sum = 0;
+      for (let i = 0; i < 6; i++) sum += a.bins[i]; // low bins = bass energy
+      const target = Math.min(1, (sum / (6 * 255)) * 1.6);
+      // fast attack, slow release
+      a.level += (target - a.level) * (target > a.level ? 0.5 : 0.08);
+    } else if (a.level > 0.001) {
+      a.level *= 0.92; // ease back to idle after stop
+    } else {
+      a.level = 0;
     }
-    mat.uniforms.uAudio.value = audioLevel.current;
+
+    if (animate) mat.uniforms.uTime.value += dt * (1.0 + a.level * 0.6);
+    mat.uniforms.uAudio.value = a.level;
   });
 
   return (
@@ -131,35 +141,32 @@ type MicState = "idle" | "requesting" | "live" | "denied" | "unsupported";
 
 export default function TerrainHero() {
   const [ready, setReady] = useState(false);
+  const [glReady, setGlReady] = useState(false);
   const [animate, setAnimate] = useState(true);
   const [segments, setSegments] = useState(150);
   const [mic, setMic] = useState<MicState>("idle");
 
-  // Shared audio level (0..1), smoothed. Mutable ref — no React state on the hot path.
-  const audioLevel = useRef(0);
+  const audio = useRef<AudioPipe>({ analyser: null, bins: null, level: 0 });
   const streamRef = useRef<MediaStream | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const small = window.innerWidth < 768;
-    setAnimate(!reduced);
-    setSegments(small ? 90 : 150);
-    setReady(true);
-    return () => stopMic(); // full cleanup on unmount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const stopMic = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
+    audio.current.analyser = null;
+    audio.current.bins = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     ctxRef.current?.close().catch(() => {});
     ctxRef.current = null;
-    audioLevel.current = 0;
     setMic("idle");
   }, []);
+
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setAnimate(!reduced);
+    setSegments(window.innerWidth < 768 ? 90 : 150);
+    setReady(true);
+    return () => stopMic();
+  }, [stopMic]);
 
   const startMic = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -172,35 +179,36 @@ export default function TerrainHero() {
       streamRef.current = stream;
       const ctx = new AudioContext();
       ctxRef.current = ctx;
-      const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
+      analyser.fftSize = 128;
       analyser.smoothingTimeConstant = 0.5;
-      source.connect(analyser);
-      const bins = new Uint8Array(analyser.frequencyBinCount);
-
-      const tick = () => {
-        analyser.getByteFrequencyData(bins);
-        // Bass energy: average of the lowest ~8 bins (roughly < 700 Hz at 44.1k)
-        let sum = 0;
-        for (let i = 0; i < 8; i++) sum += bins[i];
-        const target = Math.min(1, sum / (8 * 255) * 1.6);
-        // Asymmetric smoothing: fast attack, slower release → punchy but stable
-        const prev = audioLevel.current;
-        audioLevel.current = target > prev ? prev + (target - prev) * 0.5 : prev + (target - prev) * 0.08;
-        rafRef.current = requestAnimationFrame(tick);
-      };
-      tick();
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      audio.current.bins = new Uint8Array(analyser.frequencyBinCount);
+      audio.current.analyser = analyser; // set last: render loop picks it up
       setMic("live");
-    } catch {
+    } catch (err) {
+      console.warn("[TerrainHero] mic unavailable:", err);
       setMic("denied");
     }
   }, []);
 
-  const showMicButton = animate; // hidden under prefers-reduced-motion
-
   return (
     <div className="absolute inset-0">
+      {/* Static brand-grid fallback: visible until first WebGL frame confirms,
+          and remains if WebGL fails — the hero is never empty black. */}
+      <div
+        aria-hidden="true"
+        className={`absolute inset-0 transition-opacity duration-700 ${glReady ? "opacity-0" : "opacity-30"}`}
+        style={{
+          background:
+            "repeating-linear-gradient(90deg, rgba(38,168,255,0.14) 0 1px, transparent 1px 44px), repeating-linear-gradient(0deg, rgba(38,168,255,0.14) 0 1px, transparent 1px 44px)",
+          transform: "perspective(600px) rotateX(55deg) scale(2.2)",
+          transformOrigin: "center 85%",
+          maskImage: "linear-gradient(180deg, transparent 0%, black 45%)",
+          WebkitMaskImage: "linear-gradient(180deg, transparent 0%, black 45%)",
+        }}
+      />
+
       <div className="absolute inset-0" aria-hidden="true">
         {ready && (
           <Canvas
@@ -209,17 +217,23 @@ export default function TerrainHero() {
             gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
             frameloop={animate ? "always" : "demand"}
             className="opacity-90"
+            onCreated={({ gl }) => {
+              setGlReady(true);
+              gl.domElement.addEventListener("webglcontextlost", (e) => {
+                console.error("[TerrainHero] WebGL context lost", e);
+                setGlReady(false);
+              });
+            }}
           >
-            <TerrainMesh animate={animate} segments={segments} audioLevel={audioLevel} />
+            <TerrainMesh animate={animate} segments={segments} audio={audio} />
           </Canvas>
         )}
-        {/* Vignette + horizon glow so text stays readable over the grid */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,#0A0C10_92%)]" />
         <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-volt/40 to-transparent" />
       </div>
 
-      {/* Mic control — the Orbital demo moment */}
-      {showMicButton && (
+      {/* Mic control — glow inherits the tightened shadow-volt token */}
+      {animate && (
         <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2">
           {mic === "live" ? (
             <button
