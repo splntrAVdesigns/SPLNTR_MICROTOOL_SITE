@@ -19,7 +19,7 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       boxShadow: {
-        volt: "0 0 24px rgba(38,168,255,0.35), 0 0 64px rgba(38,168,255,0.12)",
+        volt: "0 0 8px rgba(38,168,255,0.35), 0 0 18px rgba(38,168,255,0.10)",
       },
       backgroundImage: {
         "volt-fade": "linear-gradient(180deg, rgba(38,168,255,0.14) 0%, rgba(38,168,255,0) 100%)",
