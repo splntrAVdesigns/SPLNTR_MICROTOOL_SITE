@@ -6,7 +6,7 @@ export function SplntrBolt({ className = "h-6 w-6" }: { className?: string }) {
   return (
     <svg viewBox="0 0 576 745" fill="none" className={className} aria-hidden="true">
       <path d="M363.314,0l-134.183,496.99l-229.131,-132.289l363.314,-364.701Z" fill="currentColor" />
-      <path d="M211.816,744.265l363.314,-364.701l-229.131,-132.289l-134.183,496.99Z" fill="currentColor" opacity="0.6" />
+      <path d="M211.816,744.265l363.314,-364.701l-229.131,-132.289l-134.183,496.99Z" fill="currentColor" />
     </svg>
   );
 }
