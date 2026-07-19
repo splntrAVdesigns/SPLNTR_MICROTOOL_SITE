@@ -17,14 +17,15 @@ export default function SiteNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line/70 bg-void/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-line/70 bg-void/85 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="SPLNTR home">
-          <SplntrBolt className="h-5 w-5 text-volt" />
-          <SplntrWordmark />
+        {/* Left: wordmark only â€” icon mark now lives beside the nav links */}
+        <Link href="/" aria-label="SPLNTR home">
+          <SplntrWordmark className="h-[16px] w-auto text-volt" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
+          <SplntrBolt className="h-4 w-4 shrink-0 text-volt" />
           {LINKS.map((l) => (
             <Link
               key={l.href}
@@ -44,16 +45,15 @@ export default function SiteNav() {
           </Link>
         </nav>
 
+        {/* Mobile: tap the SPLNTR icon mark to open the menu */}
         <button
           type="button"
-          className="md:hidden text-haze"
+          className={`md:hidden transition-colors ${open ? "text-volt" : "text-haze"}`}
           aria-expanded={open}
           aria-label={open ? "Close menu" : "Open menu"}
           onClick={() => setOpen((v) => !v)}
         >
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.5">
-            {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
+          <SplntrBolt className="h-6 w-6" />
         </button>
       </div>
 
