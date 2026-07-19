@@ -55,8 +55,14 @@
   to { transform: translateX(105px); }
 }
 @keyframes tileHue {
-  from { filter: blur(18px) saturate(1.2) hue-rotate(0deg); }
-  to { filter: blur(18px) saturate(1.2) hue-rotate(360deg); }
+  from { filter: hue-rotate(0deg); }
+  to { filter: hue-rotate(360deg); }
+}
+
+/* Skip rendering work for offscreen sections — real win during scroll */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
 }
 @keyframes tileDash {
   from { stroke-dashoffset: 260; }
