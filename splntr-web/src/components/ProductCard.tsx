@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Product, ProductStatus } from "@/lib/products";
+import TiltCard from "./TiltCard";
 
 const STATUS_LABEL: Record<ProductStatus, string> = {
   "closed-beta": "Closed beta",
@@ -21,6 +22,7 @@ export function StatusChip({ status }: { status: ProductStatus }) {
 
 export function ProductCard({ product }: { product: Product }) {
   return (
+    <TiltCard>
     <Link
       href={`/products/${product.slug}`}
       className="group relative flex flex-col rounded-lg border border-line bg-panel/60 p-6 transition hover:border-volt/50 hover:shadow-volt"
@@ -37,5 +39,6 @@ export function ProductCard({ product }: { product: Product }) {
         View tool <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-1">→</span>
       </span>
     </Link>
+    </TiltCard>
   );
 }
