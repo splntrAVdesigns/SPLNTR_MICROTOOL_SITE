@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PRODUCTS, getProduct } from "@/lib/products";
 import { StatusChip } from "@/components/ProductCard";
+import ProductGallery from "@/components/ProductGallery";
 import WaitlistForm from "@/components/WaitlistForm";
 import { SITE } from "@/lib/site";
 
@@ -19,7 +21,11 @@ export function generateMetadata({ params }: Params): Metadata {
   return {
     title: product.name,
     description: product.tagline,
-    openGraph: { title: `${product.name} · SPLNTR`, description: product.tagline },
+    openGraph: {
+      title: `${product.name} · SPLNTR`,
+      description: product.tagline,
+      images: [{ url: product.gallery?.[0]?.src ?? "/og-default.png" }],
+    },
   };
 }
 
@@ -48,19 +54,42 @@ export default function ProductPage({ params }: Params) {
           <span className="font-mono text-[0.62rem] uppercase tracking-[0.25em] text-haze">{product.kind}</span>
           <StatusChip status={product.status} />
         </div>
-        <h1 className="font-display text-3xl uppercase tracking-wide text-white sm:text-5xl">
-          {product.name}
-        </h1>
+
+        {product.logo ? (
+          <>
+            <Image
+              src={product.logo}
+              alt={product.name}
+              width={1200}
+              height={168}
+              priority
+              className="h-auto w-full max-w-lg"
+            />
+            <h1 className="sr-only">{product.name}</h1>
+          </>
+        ) : (
+          <h1 className="font-display text-3xl uppercase tracking-wide text-white sm:text-5xl">
+            {product.name}
+          </h1>
+        )}
+
         <p className="max-w-2xl text-lg leading-relaxed text-volt-ice">{product.tagline}</p>
         <p className="max-w-2xl leading-relaxed text-haze">{product.description}</p>
         <p className="font-mono text-[0.68rem] uppercase tracking-[0.22em] text-volt">{product.release}</p>
-        {/* TODO: replace with product demo video / interactive embed */}
-        <div className="mt-4 flex aspect-video w-full items-center justify-center rounded-lg border border-line bg-panel/60">
+      </div>
+
+      {/* Gallery — screenshots and looping clips. Add entries in products.ts. */}
+      {product.gallery?.length ? (
+        <section className="mt-10">
+          <ProductGallery items={product.gallery} />
+        </section>
+      ) : (
+        <div className="mt-10 flex aspect-video w-full items-center justify-center rounded-lg border border-line bg-panel/60">
           <span className="font-mono text-[0.68rem] uppercase tracking-[0.25em] text-haze/60">
-            Demo video coming soon
+            Product media coming soon
           </span>
         </div>
-      </div>
+      )}
 
       {/* Features */}
       <section className="mt-20">
@@ -95,7 +124,7 @@ export default function ProductPage({ params }: Params) {
           {product.faq.map((f) => (
             <details key={f.q} className="group rounded-lg border border-line bg-panel/40 px-5 py-4">
               <summary className="cursor-pointer list-none text-sm font-medium text-white">
-                <span className="mr-2 font-mono text-volt group-open:rotate-90 inline-block transition-transform">›</span>
+                <span className="mr-2 inline-block font-mono text-volt transition-transform group-open:rotate-90">›</span>
                 {f.q}
               </summary>
               <p className="mt-3 pl-5 text-sm leading-relaxed text-haze">{f.a}</p>
