@@ -140,7 +140,7 @@ function TileVisual({ id }: { id: string }) {
 
 function CarouselTile({ tile }: { tile: Tile }) {
   return (
-    <figure className="relative h-40 w-64 shrink-0 overflow-hidden rounded-lg border border-line bg-panel/70 sm:h-44 sm:w-72">
+    <figure className="relative mr-5 h-40 w-64 shrink-0 overflow-hidden rounded-lg border border-line bg-panel/70 sm:h-44 sm:w-72">
       {tile.videoSrc ? (
         <video src={tile.videoSrc} poster={tile.poster} autoPlay muted loop playsInline className="h-full w-full object-cover" />
       ) : (
@@ -160,7 +160,10 @@ export default function MediaCarousel() {
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-void to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-void to-transparent" />
       {/* duplicated track for seamless loop; pauses on hover */}
-      <div className="flex w-max gap-5 group-hover:[animation-play-state:paused]" style={{ animation: "marquee 40s linear infinite" }}>
+      <div
+        className="flex w-max group-hover:[animation-play-state:paused] motion-reduce:animate-none"
+        style={{ animation: "marquee 45s linear infinite", willChange: "transform" }}
+      >
         {[...TILES, ...TILES].map((t, i) => (
           <CarouselTile key={`${t.id}-${i}`} tile={t} />
         ))}
