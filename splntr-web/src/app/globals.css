@@ -88,3 +88,10 @@
   from { top: -20%; }
   to { top: 110%; }
 }
+
+/* Mobile terrain: seamless scroll toward the viewer. Translates by exactly
+   one grid tile (44px) so the loop has no visible seam. */
+@keyframes terrainScroll {
+  from { transform: rotateX(78deg) translate3d(0, 0, 0); }
+  to { transform: rotateX(78deg) translate3d(0, 44px, 0); }
+}
