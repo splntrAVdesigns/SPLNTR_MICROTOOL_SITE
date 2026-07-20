@@ -8,12 +8,58 @@ export interface Product {
   description: string;
   status: ProductStatus;
   release: string;
+  /** Product logo (transparent WebP) shown on the product page hero. */
+  logo?: string;
+  /** Screenshot gallery — real product captures. */
+  gallery?: { src: string; alt: string; caption: string }[];
   features: { title: string; body: string }[];
   specs: { label: string; value: string }[];
   faq: { q: string; a: string }[];
 }
 
 export const PRODUCTS: Product[] = [
+  {
+    slug: "slicer-pro",
+    name: "SPLNTR Slicer Pro",
+    kind: "Audio Plugin",
+    tagline: "Slice. Perform. Transform. An advanced sample slicing and performance plugin for modern producers.",
+    description:
+      "Slicer Pro is a performance sampler built for producers, sound designers, DJs, and live performers. Intelligent slicing, creative loop modes, OSC/LFO modulation, and a dual filter + macro system — wrapped in a super intuitive slicing engine.",
+    status: "coming-soon",
+    release: "Fall 2026 · AU / VST3 / Standalone · macOS first (Windows coming)",
+    logo: "/products/slicer-pro/logo.webp",
+    gallery: [
+      {
+        src: "/products/slicer-pro/ui-full.webp",
+        alt: "SPLNTR Sample Slicer Pro full interface showing waveform editor, oscillators, LFOs, filters and macro controls",
+        caption: "The full interface — waveform editor, dual oscillators, LFOs, filters, and six assignable macros.",
+      },
+      {
+        src: "/products/slicer-pro/ui-daw.webp",
+        alt: "SPLNTR Sample Slicer Pro running as a plugin inside a DAW",
+        caption: "Running in-session as an AU/VST3 plugin, with host sync and live slice playback.",
+      },
+    ],
+    features: [
+      { title: "Intelligent sample slicing", body: "Fast, musical slice detection with a workflow built for performance, not menu-diving." },
+      { title: "Performance playback engine", body: "Trigger, retrigger, and remix slices live. Built for hands-on playing." },
+      { title: "Creative loop modes", body: "Loop, reverse, and transform slices into new material on the fly." },
+      { title: "Advanced waveform editor", body: "Precision editing with visual analysis so you always see what you hear." },
+      { title: "OSC / LFO modulation", body: "Modulate anything. Dual filters and a macro system keep it playable." },
+      { title: "Sound sculpting FX", body: "Shape slices into finished sounds without leaving the plugin." },
+    ],
+    specs: [
+      { label: "Formats", value: "AU, VST3, Standalone" },
+      { label: "Platform", value: "macOS (Windows coming)" },
+      { label: "Release", value: "Fall 2026" },
+      { label: "Status", value: "Closed beta testing" },
+    ],
+    faq: [
+      { q: "When does Slicer Pro release?", a: "Fall 2026, macOS first with AU, VST3, and Standalone builds. A Windows version follows." },
+      { q: "Will there be a demo?", a: "Yes — a fully functional trial is planned at launch, so you can test it in your own sessions before buying." },
+      { q: "How do I join the beta?", a: "Join the waitlist and tell us about your setup. Beta invites go out in waves." },
+    ],
+  },
   {
     slug: "blendcraft-studio",
     name: "BlendCraft Studio",
@@ -90,35 +136,6 @@ export const PRODUCTS: Product[] = [
     faq: [
       { q: "Is this a course?", a: "No — it's a tool. Harmony Compass is built for exploring and applying theory while you work, at your own pace." },
       { q: "How do I get access?", a: "Harmony Compass is in closed beta. Join the waitlist for an invite." },
-    ],
-  },
-  {
-    slug: "slicer-pro",
-    name: "SPLNTR Slicer Pro",
-    kind: "Audio Plugin",
-    tagline: "Slice. Perform. Transform. An advanced sample slicing and performance plugin for modern producers.",
-    description:
-      "Slicer Pro is a performance sampler built for producers, sound designers, DJs, and live performers. Intelligent slicing, creative loop modes, OSC/LFO modulation, and a dual filter + macro system — wrapped in a super intuitive slicing engine.",
-    status: "coming-soon",
-    release: "Fall 2026 · AU / VST3 / Standalone · macOS first (Windows coming)",
-    features: [
-      { title: "Intelligent sample slicing", body: "Fast, musical slice detection with a workflow built for performance, not menu-diving." },
-      { title: "Performance playback engine", body: "Trigger, retrigger, and remix slices live. Built for hands-on playing." },
-      { title: "Creative loop modes", body: "Loop, reverse, and transform slices into new material on the fly." },
-      { title: "Advanced waveform editor", body: "Precision editing with visual analysis so you always see what you hear." },
-      { title: "OSC / LFO modulation", body: "Modulate anything. Dual filters and a macro system keep it playable." },
-      { title: "Sound sculpting FX", body: "Shape slices into finished sounds without leaving the plugin." },
-    ],
-    specs: [
-      { label: "Formats", value: "AU, VST3, Standalone" },
-      { label: "Platform", value: "macOS (Windows coming)" },
-      { label: "Release", value: "Fall 2026" },
-      { label: "Status", value: "Closed beta testing" },
-    ],
-    faq: [
-      { q: "When does Slicer Pro release?", a: "Fall 2026, macOS first with AU, VST3, and Standalone builds. A Windows version follows." },
-      { q: "Will there be a demo?", a: "Yes — a fully functional trial is planned at launch, so you can test it in your own sessions before buying." },
-      { q: "How do I join the beta?", a: "Join the waitlist and tell us about your setup. Beta invites go out in waves." },
     ],
   },
 ];
