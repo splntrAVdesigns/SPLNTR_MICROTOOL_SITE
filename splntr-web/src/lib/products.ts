@@ -15,6 +15,12 @@ export interface Product {
    * page carousel. Set `video: true` for short looping .mp4/.webm clips.
    */
   gallery?: { src: string; alt: string; caption: string; video?: boolean }[];
+  /**
+   * Playable audio previews. Only meaningful for audio-focused tools
+   * (Slicer Pro, Harmony Compass). Leave undefined for visual/design tools.
+   * An empty array renders the section in its "coming soon" state.
+   */
+  audio?: { src: string; title: string; note: string }[];
   features: { title: string; body: string }[];
   specs: { label: string; value: string }[];
   faq: { q: string; a: string }[];
@@ -31,6 +37,8 @@ export const PRODUCTS: Product[] = [
     status: "coming-soon",
     release: "Fall 2026 · AU / VST3 / Standalone · macOS first (Windows coming)",
     logo: "/media/slicer-pro/logo.webp",
+    // Drop MP3s into /public/media/slicer-pro/audio/ and add entries here.
+    audio: [],
     gallery: [
       {
         src: "/media/slicer-pro/ui-full.webp",
@@ -72,6 +80,38 @@ export const PRODUCTS: Product[] = [
       "BlendCraft Studio is a WebGL design engine for professional motion graphics. Layer animated gradients, masks, textures, and uploaded media, then export high-quality images and video straight from the browser.",
     status: "closed-beta",
     release: "In closed beta",
+    gallery: [
+      {
+        src: "/media/blendcraft-studio/launch.webp",
+        alt: "BlendCraft Studio launch screen with animated gradient background",
+        caption: "The launch screen — a live WebGL gradient running the same engine that powers every export.",
+      },
+      {
+        src: "/media/blendcraft-studio/pulsar-inapp.webp",
+        alt: "BlendCraft Studio interface showing the PULSAR logo with texture and dither effects applied",
+        caption: "Working in-studio: texture, grain, dithering, and color adjustments applied to a masked logo.",
+      },
+      {
+        src: "/media/blendcraft-studio/pulsar-render.webp",
+        alt: "Finished PULSAR logo render with grain-textured gradient fill",
+        caption: "The finished export — gradient fill and film grain rendered through a source mask.",
+      },
+      {
+        src: "/media/blendcraft-studio/splntr-inapp.webp",
+        alt: "BlendCraft Studio interface with the SPLNTR Sample Slicer Pro logo on a four-corner gradient",
+        caption: "Four-corner gradient with an image mask — brand assets built in minutes, not hours.",
+      },
+      {
+        src: "/media/blendcraft-studio/gradient-1.webp",
+        alt: "Abstract blue and violet liquid gradient generated in BlendCraft Studio",
+        caption: "Generative backgrounds: liquid distortion, ready to export as stills or motion loops.",
+      },
+      {
+        src: "/media/blendcraft-studio/gradient-2.webp",
+        alt: "Abstract amber and violet swirling gradient generated in BlendCraft Studio",
+        caption: "Palette-driven output — every look is repeatable, adjustable, and yours to license.",
+      },
+    ],
     features: [
       { title: "GPU gradient engine", body: "Layered gradient types with real-time shader rendering. No plugins, no render farm — your GPU does the work." },
       { title: "Mask & texture layers", body: "Shape patterns, spackle, grunge, and custom image masks. Stack them, blend them, animate them." },
@@ -126,6 +166,8 @@ export const PRODUCTS: Product[] = [
       "Harmony Compass is a web-based audio engine for producers who want theory to work for them. Explore harmony, analyze ideas, and turn understanding into sound without leaving the browser.",
     status: "dev-stage",
     release: "In development",
+    // Drop MP3s into /public/media/harmony-compass/audio/ and add entries here.
+    audio: [],
     features: [
       { title: "Theory that plays", body: "Hear every concept as sound. Scales, chords, and progressions are playable, not just diagrams." },
       { title: "Analysis tools", body: "Break down ideas and understand why they work — then reuse the pattern in your own music." },
