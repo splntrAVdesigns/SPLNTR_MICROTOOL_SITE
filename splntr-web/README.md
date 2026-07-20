@@ -1,15 +1,22 @@
-# SPLNTR Web — Next.js App
+# SPLNTR Web
 
-The production codebase for **splntr.com**: marketing, product pages, and (later)
-accounts, licensing, and downloads. The Framer landing page remains a marketing
-surface; this repo is the primary build going forward.
+Production codebase for **[splntr-microtools.com](https://splntr-microtools.com)** — the marketing and product site for SPLNTR's audio and visual micro tools.
+
+**Live:** https://splntr-microtools.com
+**Hosting:** Vercel (auto-deploys from `main`)
+**Plan:** see `SPLNTR-WEB-DEVELOPMENT-PLAN.md` for the phased roadmap
+
+---
 
 ## Stack
 
-- **Next.js 14 (App Router)** + TypeScript
-- **Tailwind CSS 3.4** — brand tokens in `tailwind.config.ts` (`void`, `panel`, `volt`, etc.)
-- **Three.js + @react-three/fiber** — signature GLSL wireframe terrain hero
+- **Next.js 14** (App Router) + TypeScript
+- **Tailwind CSS 3.4** — brand tokens in `tailwind.config.ts` (`void`, `panel`, `line`, `volt`, `volt-ice`, `haze`)
+- **Three.js + @react-three/fiber** — GLSL wireframe terrain hero (desktop/tablet)
+- **Supabase** — waitlist storage (Postgres + RLS)
 - **React 18** — matches the BlendCraft Studio stack
+
+> **Dependency policy:** never run `npm audit fix --force`. It upgrades Next.js across a major version and breaks the build. A deliberate Next 15 + React 19 + r3f 9 upgrade sprint is planned post-launch.
 
 ## Getting started
 
@@ -19,88 +26,110 @@ npm run dev        # http://localhost:3000
 npm run build      # production build check
 ```
 
-## Recommended workflow (important)
+Node 20 recommended (via `nvm`). If `npx next --version` doesn't report `14.2.x`, reinstall from a clean `package.json`.
 
-This project does **not** run inside Figma / Figma Make — Figma Make is a Vite
-SPA sandbox with no Next.js runtime, routing, or API routes. Instead:
-
-1. Push this repo to **GitHub**.
-2. Connect it to **Vercel** (free tier). Every push gets a live preview URL —
-   that's your test/review surface, and production hosting.
-3. Iterate with **Claude Code** against this repo (same sprint/patch loop as
-   BlendCraft, but with real git history).
-
-The visual components (`TerrainHero`, cards) are self-contained plain
-React + three, so individual components *can* be pasted into Figma Make for
-visual prototyping if ever useful — but the app lives here.
-
-## Structure
+## Project structure
 
 ```
 src/
   app/
-    layout.tsx            # fonts, metadata, nav/footer shell
-    page.tsx              # home: terrain hero, product grid, waitlist
-    products/page.tsx     # lineup index
-    products/[slug]/      # per-product pages (features/specs/FAQ/waitlist + JSON-LD)
-    about/  contact/      # brand + contact pages
-    legal/[slug]/         # privacy, terms, eula, refunds (placeholder content)
-    api/waitlist/route.ts # waitlist endpoint (logs now, Supabase later)
-  components/             # TerrainHero, SiteNav, SiteFooter, ProductCard, WaitlistForm, SplntrLogo
+    layout.tsx              # fonts, metadata, icons, OG defaults, nav/footer shell
+    page.tsx                # home: terrain hero, product grid, pillars, carousel, waitlist
+    products/page.tsx       # Micro Tools index
+    products/[slug]/        # per-product page (gallery, audio, features, specs, FAQ, waitlist)
+    shop/page.tsx           # Shop — merch, sample packs, FX packs, free downloads
+    about/  contact/        # brand + contact
+    legal/[slug]/           # privacy, terms, eula, refunds
+    api/waitlist/route.ts   # waitlist endpoint -> Supabase
+    sitemap.ts  robots.ts   # auto-generated from product + legal data
+  components/
+    TerrainHero.tsx         # WebGL terrain (desktop/tablet)
+    MobileTerrain.tsx       # CSS terrain (phones) — see performance notes
+    MediaCarousel.tsx       # home marquee strip
+    ProductGallery.tsx      # product image/video carousel
+    AudioPreviewPlayer.tsx  # playable audio snippets w/ live spectrum
+    ProductCard.tsx         # card + StatusChip (color-coded status system)
+    TiltCard.tsx            # cursor-reactive 3D tilt wrapper
+    SiteNav.tsx  SiteFooter.tsx  SplntrLogo.tsx  WaitlistForm.tsx
   lib/
-    products.ts           # single source of truth for the product catalog
-    site.ts               # site constants + placeholder legal docs
+    products.ts             # SINGLE SOURCE OF TRUTH for the product catalog
+    site.ts                 # site constants + legal document content
+    supabase.ts             # server-only Supabase client
+public/
+  media/<product-slug>/     # product screenshots, clips, audio
+  og-default.png  favicon.*  icon-*.png  manifest.webmanifest
 ```
 
-## Before deploy — replace the TODOs
+## Common tasks
 
-- `src/lib/site.ts`: real domain, branded email, real social links
-- `src/components/SplntrLogo.tsx`: swap placeholder bolt for the real logo SVG paths
-- `src/lib/site.ts` legal docs: replace with reviewed legal text (generator + review)
-- Product pages: add real demo videos where the placeholder frames sit
+### Add a product image or video clip
 
-## Supabase waitlist setup (one-time, ~5 min)
+1. Drop the file in `public/media/<product-slug>/` (WebP for stills, MP4/WebM for motion)
+2. Add an entry to that product's `gallery` array in `src/lib/products.ts`:
 
-1. Create a free project at https://supabase.com (any name, e.g. `splntr`).
-2. In the dashboard: **SQL Editor → New query**, paste the contents of
-   `supabase/schema.sql`, and Run. This creates the locked-down `waitlist` table.
-3. **Project Settings → API**: copy the Project URL and the `service_role` key.
-4. Locally: copy `.env.local.example` to `.env.local` and fill both values,
-   then restart `npm run dev`.
-5. On Vercel: Project → Settings → Environment Variables → add the same two
-   vars, then redeploy.
-6. Test: submit the waitlist form, then check **Table Editor → waitlist** in
-   Supabase — your row should appear.
+```ts
+gallery: [
+  { src: "/media/slicer-pro/ui-full.webp", alt: "...", caption: "..." },
+  { src: "/media/slicer-pro/slice-demo.mp4", alt: "...", caption: "...", video: true },
+]
+```
 
-Until env vars are set, the form still works and logs signups server-side.
+The first entry loads by default and doubles as the page's OG share image. Prefer MP4 over GIF for motion — same look, a fraction of the weight.
 
-## Parked for later ("future developments")
+### Add an audio preview
 
-- Audio-reactive hero terrain (mic-driven). Removed after it caused WebGL
-  render failures on real hardware that could not be reproduced headlessly.
-  Rule for revisiting: FIRST ship a diagnostics build (console logging of
-  context creation, shader compile status, and errors), confirm root cause
-  from real browser console output, THEN reintroduce the feature.
+1. Drop MP3s (128–192 kbps) in `public/media/<product-slug>/audio/`
+2. Add entries to that product's `audio` array:
 
-- Community page (Discord link-out or embedded forum)
-- Beta tester quotes / social proof strip
-- Press kit page (logo pack + screenshots) — expected by reviewers at launch
-- "Built with our tools" proof strips per product page
+```ts
+audio: [
+  { src: "/media/slicer-pro/audio/braam-slice.mp3", title: "Deep Braam — 16 slices", note: "Full to sliced, FWD mode" },
+]
+```
 
-## Roadmap (matches the strategy report)
+An empty array (`audio: []`) renders the "coming soon" state. Omitting the field entirely hides the section — correct for visual/design tools.
 
-- **Phase 2** — content depth: demo videos, changelog data per product, blog
-  (MDX or Supabase-backed), per-product OG images.
-- **Phase 3** — commerce (timed to Slicer Pro, Fall 2026):
-  - Supabase: `waitlist` table DONE — next: Auth, then `licenses` +
-    `downloads` with signed URLs from Storage
-  - Merchant of Record: Lemon Squeezy checkout overlay + webhook → license row
-  - Account area: `/account` (login, licenses, downloads)
-  - macOS: Apple Developer ID signing + notarization for Slicer Pro installers
+### Add a product
 
-## Performance rules
+Append to `PRODUCTS` in `src/lib/products.ts`. Page, route, sitemap entry, and card all generate from that array. Order in the array = display order.
 
-The terrain hero caps DPR at 1.75, drops mesh density on mobile, honors
-`prefers-reduced-motion`, and sits behind a dynamic import so it never blocks
-first paint. Keep future WebGL sections on the same pattern: client-only,
-capped DPR, static fallback.
+### Change a status chip
+
+`ProductStatus` in `products.ts` supports `closed-beta` (volt blue), `dev-stage` (purple), `coming-soon` / `released` (green). Colors are mapped in `ProductCard.tsx`.
+
+## Supabase waitlist
+
+Schema lives in `supabase/schema.sql`. Env vars (locally in `.env.local`, and in Vercel → Settings → Environment Variables):
+
+```
+NEXT_PUBLIC_SITE_URL=https://splntr-microtools.com
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<server-only secret>
+```
+
+The service-role key is **server-only** — `src/lib/supabase.ts` imports `server-only`, so any accidental client import becomes a build error. The `waitlist` table has RLS enabled with an explicit deny-all policy for anon/authenticated roles; inserts happen only through the API route.
+
+Without env vars configured, the form still works and logs signups to the server console instead of failing.
+
+## Performance notes
+
+- The WebGL hero is the only WebGL surface on the site. Keep it that way.
+- Terrain caps DPR at 1.75, reduces mesh density under 768px, honors `prefers-reduced-motion`.
+- **Phones get `MobileTerrain` (CSS) instead of WebGL** — a deliberate split, not a fallback. WebGL animation proved unreliable across mobile browsers; the CSS version matches the desktop look, skips shader compile, and saves battery. Breakpoint is `max-width: 767px`, so tablets get the WebGL version.
+- The home carousel animates one GPU-composited transform and sits behind `content-visibility: auto`, so it costs nothing while offscreen. Spacing lives on each tile (`mr-5`) rather than a container `gap` — this keeps the duplicated track exactly 2x one set so the `-50%` loop is seamless.
+- Every video ships with a poster and lazy-loads.
+
+## Parked / future developments
+
+- **Audio-reactive hero terrain (mic-driven)** — removed after causing WebGL render failures on real hardware that couldn't be reproduced headlessly. Rule for revisiting: ship a diagnostics build first (log context creation, shader compile status, errors), confirm root cause from real browser console output, *then* reintroduce.
+- Branded email (`info@`) — parked to Phase 5, alongside Resend for waitlist announcements
+- Community page (Discord or embedded forum)
+- Press kit page (logo pack, screenshots, boilerplate)
+- Beta-tester quotes / social proof
+- Per-product "built with our tools" proof strips
+
+## Before first paid sale
+
+- Legal review of the **EULA** and **Refund Policy** in `src/lib/site.ts` (drafted for this specific business model, but not lawyer-reviewed)
+- Apple Developer Program ($99/yr) → code-signing + notarization for macOS plugin builds
+- Merchant-of-Record checkout + license delivery (see Phase 5 of the development plan)
