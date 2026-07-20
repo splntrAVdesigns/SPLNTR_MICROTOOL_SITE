@@ -27,6 +27,9 @@ export default function LegalPage({ params }: Params) {
       <p className="mt-2 font-mono text-[0.68rem] uppercase tracking-[0.22em] text-haze">
         Last updated {doc.updated}
       </p>
+      {doc.intro && (
+        <p className="mt-8 max-w-2xl leading-relaxed text-volt-ice">{doc.intro}</p>
+      )}
       <div className="mt-10 space-y-8">
         {doc.sections.map((s) => (
           <section key={s.heading}>
@@ -36,7 +39,8 @@ export default function LegalPage({ params }: Params) {
         ))}
       </div>
       <p className="mt-12 rounded border border-line bg-panel/40 p-4 text-xs text-haze/70">
-        Placeholder document — replace with reviewed legal text before launch.
+        Questions about this document? Email us via the{" "}
+        <a href="/contact" className="text-volt-ice hover:text-volt">contact page</a>.
       </p>
     </div>
   );
