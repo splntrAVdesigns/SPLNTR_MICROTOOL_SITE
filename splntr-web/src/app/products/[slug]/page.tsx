@@ -161,4 +161,4 @@ export default function ProductPage({ params }: Params) {
       </section>
     </div>
   );
-}
+} 
