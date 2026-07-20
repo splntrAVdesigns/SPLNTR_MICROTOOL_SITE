@@ -82,9 +82,12 @@ function TerrainMesh({ animate, segments }: { animate: boolean; segments: number
     []
   );
 
-  useFrame((_, delta) => {
+  useFrame((state) => {
+    // Read absolute elapsed time rather than accumulating per-frame deltas:
+    // accumulation can stall permanently if a device reports a zero/NaN
+    // delta (throttled rAF on mobile), which freezes the terrain.
     if (animate && matRef.current) {
-      matRef.current.uniforms.uTime.value += delta;
+      matRef.current.uniforms.uTime.value = state.clock.getElapsedTime();
     }
   });
 
