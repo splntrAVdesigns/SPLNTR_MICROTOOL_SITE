@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PRODUCTS, getProduct } from "@/lib/products";
 import { StatusChip } from "@/components/ProductCard";
 import ProductGallery from "@/components/ProductGallery";
+import AudioPreviewPlayer from "@/components/AudioPreviewPlayer";
 import WaitlistForm from "@/components/WaitlistForm";
 import { SITE } from "@/lib/site";
 
@@ -89,6 +90,19 @@ export default function ProductPage({ params }: Params) {
             Product media coming soon
           </span>
         </div>
+      )}
+
+      {/* Hear it — audio tools only (Slicer Pro, Harmony Compass) */}
+      {product.audio && (
+        <section className="mt-20">
+          <h2 className="font-display text-xl uppercase tracking-wide text-white">Hear it</h2>
+          <p className="mt-2 max-w-2xl text-sm text-haze">
+            Sound-check {product.name} in the browser — no install required.
+          </p>
+          <div className="mt-6">
+            <AudioPreviewPlayer tracks={product.audio} />
+          </div>
+        </section>
       )}
 
       {/* Features */}
