@@ -27,15 +27,15 @@ export const PRODUCTS: Product[] = [
       "Slicer Pro is a performance sampler built for producers, sound designers, DJs, and live performers. Intelligent slicing, creative loop modes, OSC/LFO modulation, and a dual filter + macro system — wrapped in a super intuitive slicing engine.",
     status: "coming-soon",
     release: "Fall 2026 · AU / VST3 / Standalone · macOS first (Windows coming)",
-    logo: "/products/slicer-pro/logo.webp",
+    logo: "/media/slicer-pro/logo.webp",
     gallery: [
       {
-        src: "/products/slicer-pro/ui-full.webp",
+        src: "/media/slicer-pro/ui-full.webp",
         alt: "SPLNTR Sample Slicer Pro full interface showing waveform editor, oscillators, LFOs, filters and macro controls",
         caption: "The full interface — waveform editor, dual oscillators, LFOs, filters, and six assignable macros.",
       },
       {
-        src: "/products/slicer-pro/ui-daw.webp",
+        src: "/media/slicer-pro/ui-daw.webp",
         alt: "SPLNTR Sample Slicer Pro running as a plugin inside a DAW",
         caption: "Running in-session as an AU/VST3 plugin, with host sync and live slice playback.",
       },
