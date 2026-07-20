@@ -10,8 +10,11 @@ export interface Product {
   release: string;
   /** Product logo (transparent WebP) shown on the product page hero. */
   logo?: string;
-  /** Screenshot gallery — real product captures. */
-  gallery?: { src: string; alt: string; caption: string }[];
+  /**
+   * Screenshot gallery / carousel. Add entries here to populate the product
+   * page carousel. Set `video: true` for short looping .mp4/.webm clips.
+   */
+  gallery?: { src: string; alt: string; caption: string; video?: boolean }[];
   features: { title: string; body: string }[];
   specs: { label: string; value: string }[];
   faq: { q: string; a: string }[];
