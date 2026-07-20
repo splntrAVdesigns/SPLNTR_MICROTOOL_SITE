@@ -19,6 +19,7 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import MobileTerrain from "./MobileTerrain";
 
 const VERT = /* glsl */ `
   uniform float uTime;
@@ -111,14 +112,28 @@ export default function TerrainHero() {
   const [ready, setReady] = useState(false);
   const [animate, setAnimate] = useState(true);
   const [segments, setSegments] = useState(150);
+  /**
+   * Mobile gets the CSS terrain instead of WebGL. This is a deliberate
+   * split, not a fallback: WebGL animation proved unreliable across mobile
+   * browsers, and skipping the canvas entirely also saves battery and
+   * shader-compile time on exactly the devices that can least afford it.
+   */
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const small = window.innerWidth < 768;
+    const small = window.matchMedia("(max-width: 767px)").matches;
     setAnimate(!reduced);
     setSegments(small ? 90 : 150);
+    setIsMobile(small);
     setReady(true);
   }, []);
+
+  // Until we know the viewport, render nothing rather than flashing the
+  // wrong hero (avoids a visible swap on first paint).
+  if (isMobile === null) return <div className="absolute inset-0" aria-hidden="true" />;
+
+  if (isMobile) return <MobileTerrain />;
 
   return (
     <div className="absolute inset-0" aria-hidden="true">
