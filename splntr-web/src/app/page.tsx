@@ -68,7 +68,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Brand focus: what we build ───────────────────────────────── */}
-      <section className="border-t border-line/60 bg-panel/30">
+      <section className="cv-auto border-t border-line/60 bg-panel/30">
         <div className="mx-auto max-w-6xl px-5 py-24">
           <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-volt">What we build</p>
           <h2 className="mt-3 max-w-2xl font-display text-2xl uppercase tracking-wide text-white sm:text-3xl">
@@ -108,7 +108,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Manifesto strip ──────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-y border-line/60 bg-panel/40">
+      <section className="cv-auto relative overflow-hidden border-y border-line/60 bg-panel/40">
         <div className="scanlines relative mx-auto grid max-w-6xl gap-10 px-5 py-20 md:grid-cols-2">
           <h2 className="font-display text-2xl uppercase leading-snug tracking-wide text-white sm:text-3xl">
             Custom integrations<br />&amp; precise algorithms<span className="text-volt">.</span>
