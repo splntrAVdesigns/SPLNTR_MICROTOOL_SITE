@@ -57,7 +57,7 @@ export default function ProductGallery({ items }: { items: GalleryItem[] }) {
       aria-label="Product images"
     >
       <figure className="relative overflow-hidden rounded-lg border border-line bg-panel/40">
-        <div className="relative aspect-[16/10] w-full">
+        <div className="relative aspect-[1200/630] w-full bg-void">
           {current.video ? (
             <video
               key={current.src}
@@ -66,7 +66,7 @@ export default function ProductGallery({ items }: { items: GalleryItem[] }) {
               muted
               loop
               playsInline
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
             />
           ) : (
             <Image
@@ -75,8 +75,9 @@ export default function ProductGallery({ items }: { items: GalleryItem[] }) {
               alt={current.alt}
               fill
               priority={index === 0}
-              sizes="(max-width: 1024px) 100vw, 1024px"
-              className="object-cover"
+              quality={92}
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 90vw, 1200px"
+              className="object-contain"
             />
           )}
         </div>
