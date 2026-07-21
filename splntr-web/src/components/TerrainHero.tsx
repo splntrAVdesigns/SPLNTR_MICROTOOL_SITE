@@ -109,9 +109,11 @@ function TerrainMesh({ animate, segments }: { animate: boolean; segments: number
 }
 
 export default function TerrainHero() {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [animate, setAnimate] = useState(true);
   const [segments, setSegments] = useState(150);
+  const [inView, setInView] = useState(true);
   /**
    * Mobile gets the CSS terrain instead of WebGL. This is a deliberate
    * split, not a fallback: WebGL animation proved unreliable across mobile
@@ -129,6 +131,19 @@ export default function TerrainHero() {
     setReady(true);
   }, []);
 
+  // Stop rendering once the hero scrolls out of view — the single biggest
+  // win for scroll smoothness, since a full-screen WebGL canvas otherwise
+  // keeps drawing every frame while the user reads the rest of the page.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), {
+      threshold: 0.01,
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   // Until we know the viewport, render nothing rather than flashing the
   // wrong hero (avoids a visible swap on first paint).
   if (isMobile === null) return <div className="absolute inset-0" aria-hidden="true" />;
@@ -136,13 +151,13 @@ export default function TerrainHero() {
   if (isMobile) return <MobileTerrain />;
 
   return (
-    <div className="absolute inset-0" aria-hidden="true">
+    <div ref={rootRef} className="absolute inset-0" aria-hidden="true">
       {ready && (
         <Canvas
           dpr={[1, 1.75]}
           camera={{ position: [0, 1.4, 4.5], fov: 60 }}
           gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-          frameloop={animate ? "always" : "demand"}
+          frameloop={animate && inView ? "always" : "demand"}
           className="opacity-90"
         >
           <TerrainMesh animate={animate} segments={segments} />
