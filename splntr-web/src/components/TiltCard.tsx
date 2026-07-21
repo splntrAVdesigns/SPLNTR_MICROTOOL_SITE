@@ -1,17 +1,24 @@
 "use client";
 
-import { useRef, useCallback, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 
 /**
  * TiltCard — cursor-reactive 3D tilt + spotlight glow.
  *
- * Wraps any card content. As the cursor moves, the card tilts toward it in
- * perspective and a soft volt-blue spotlight follows the pointer.
+ * SCROLL-PERFORMANCE NOTE (v2):
+ * The first version called getBoundingClientRect() inside onPointerMove.
+ * That forces a synchronous layout on every pointer event, and browsers fire
+ * pointermove continuously while scrolling — so with 4-8 cards on a page the
+ * main thread was doing repeated forced reflows mid-scroll. That is the
+ * "tug"/lag felt when scrolling on desktop.
  *
- * Performance & accessibility:
- *  - Direct style writes (no React state) — zero re-renders during movement
- *  - Auto-disabled for touch devices (pointer: coarse) and reduced motion
- *  - GPU-composited transform only; resets smoothly on leave
+ * Fixes here:
+ *  - rect is measured once on pointerenter and cached (invalidated on leave)
+ *  - style writes are batched into a single requestAnimationFrame
+ *  - effects disable themselves while the user is actively scrolling
+ *
+ * Net effect: zero layout reads during scroll, at most one style write per
+ * frame while hovering.
  */
 export default function TiltCard({
   children,
@@ -23,33 +30,73 @@ export default function TiltCard({
   maxTilt?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const rectRef = useRef<DOMRect | null>(null);
+  const frameRef = useRef<number>(0);
+  const pendingRef = useRef<{ px: number; py: number } | null>(null);
+  const scrollingRef = useRef(false);
+  const enabledRef = useRef(false);
 
-  const isFine = useCallback(() => {
-    return (
-      typeof window !== "undefined" &&
+  useEffect(() => {
+    enabledRef.current =
       window.matchMedia("(pointer: fine)").matches &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Suppress tilt while scrolling; re-enable shortly after it stops.
+    let t: ReturnType<typeof setTimeout>;
+    const onScroll = () => {
+      scrollingRef.current = true;
+      rectRef.current = null; // position changed — cached rect is stale
+      clearTimeout(t);
+      t = setTimeout(() => {
+        scrollingRef.current = false;
+      }, 120);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(t);
+      cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
+
+  const flush = useCallback(() => {
+    frameRef.current = 0;
+    const el = ref.current;
+    const p = pendingRef.current;
+    if (!el || !p) return;
+    const rx = (0.5 - p.py) * maxTilt;
+    const ry = (p.px - 0.5) * maxTilt;
+    el.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+    el.style.setProperty("--spot-x", `${(p.px * 100).toFixed(1)}%`);
+    el.style.setProperty("--spot-y", `${(p.py * 100).toFixed(1)}%`);
+    el.style.setProperty("--spot-o", "1");
+  }, [maxTilt]);
+
+  const onEnter = useCallback(() => {
+    if (!enabledRef.current) return;
+    // Single layout read per hover, not per move.
+    rectRef.current = ref.current?.getBoundingClientRect() ?? null;
   }, []);
 
   const onMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      const el = ref.current;
-      if (!el || !isFine()) return;
-      const r = el.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width; // 0..1
-      const py = (e.clientY - r.top) / r.height;
-      const rx = (0.5 - py) * maxTilt; // tilt toward cursor
-      const ry = (px - 0.5) * maxTilt;
-      el.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateZ(0)`;
-      el.style.setProperty("--spot-x", `${(px * 100).toFixed(1)}%`);
-      el.style.setProperty("--spot-y", `${(py * 100).toFixed(1)}%`);
-      el.style.setProperty("--spot-o", "1");
+      if (!enabledRef.current || scrollingRef.current) return;
+      const r = rectRef.current;
+      if (!r) return;
+      pendingRef.current = {
+        px: (e.clientX - r.left) / r.width,
+        py: (e.clientY - r.top) / r.height,
+      };
+      if (!frameRef.current) frameRef.current = requestAnimationFrame(flush);
     },
-    [isFine, maxTilt]
+    [flush]
   );
 
   const onLeave = useCallback(() => {
+    rectRef.current = null;
+    pendingRef.current = null;
+    cancelAnimationFrame(frameRef.current);
+    frameRef.current = 0;
     const el = ref.current;
     if (!el) return;
     el.style.transform = "perspective(900px) rotateX(0deg) rotateY(0deg)";
@@ -59,12 +106,12 @@ export default function TiltCard({
   return (
     <div
       ref={ref}
+      onPointerEnter={onEnter}
       onPointerMove={onMove}
       onPointerLeave={onLeave}
-      className={`group/tilt relative transition-transform duration-300 ease-out will-change-transform ${className}`}
+      className={`group/tilt relative transition-transform duration-300 ease-out ${className}`}
       style={{ transform: "perspective(900px)" }}
     >
-      {/* Spotlight overlay following the cursor */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-10 rounded-lg transition-opacity duration-300"
